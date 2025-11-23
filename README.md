@@ -3,6 +3,7 @@
 A ComfyUI custom node extension that hides image previews until you hover over the node, helping keep your workflow clean and organized.
 
 ## ✨ What's New in v2.0
+<img width="2282" height="1117" alt="image" src="https://github.com/user-attachments/assets/9d05c7e7-d716-43c0-be5f-2365a45652f1" />
 
 - **🎛️ Enable/Disable Toggle**: Easily turn the hiding functionality on/off without removing nodes
 - **🌫️ Blur Mode**: New blur effect option as an alternative to the cover overlay
@@ -99,3 +100,4 @@ MIT License
 ## Credits
 
 Created for ComfyUI
+
