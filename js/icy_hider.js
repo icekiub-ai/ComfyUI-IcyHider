@@ -4,65 +4,115 @@ app.registerExtension({
 	name: "Comfy.IcyHider",
     settings: [
         {
+            id: "IcyHider.Enabled",
+            name: "Enable Hiding",
+            type: "boolean",
+            defaultValue: true,
+            tooltip: "Enable or disable the image hiding functionality.",
+            onChange: (newVal) => {
+                // Update all IcyHider nodes when toggled
+                if (app.graph && app.graph._nodes) {
+                    app.graph._nodes.forEach(node => {
+                        if (node.comfyClass === "IcyPreviewImage" || node.comfyClass === "IcyLoadImage" || node.comfyClass === "IcySaveImage") {
+                            if (newVal) {
+                                node.icy_hidden = true;
+                            } else {
+                                node.icy_hidden = false;
+                            }
+                            node.setDirtyCanvas(true, true);
+                        }
+                    });
+                }
+            }
+        },
+        {
+            id: "IcyHider.HideMode",
+            name: "Hide Mode",
+            type: "combo",
+            defaultValue: "cover",
+            options: ["cover", "blur"],
+            tooltip: "Choose between cover overlay or blur effect."
+        },
+        {
+            id: "IcyHider.BlurAmount",
+            name: "Blur Amount",
+            type: "slider",
+            defaultValue: 20,
+            attrs: {
+                min: 0,
+                max: 50,
+                step: 1
+            },
+            tooltip: "Amount of blur to apply (0-50px). Only applies when Hide Mode is 'blur'."
+        },
+        {
             id: "IcyHider.GradientStart",
             name: "Gradient Start Color",
             type: "color",
             defaultValue: "1E3C72",
-            tooltip: "The starting color of the gradient background."
+            tooltip: "The starting color of the gradient background (cover mode only)."
         },
         {
             id: "IcyHider.GradientEnd",
             name: "Gradient End Color",
             type: "color",
             defaultValue: "2A5298",
-            tooltip: "The ending color of the gradient background."
+            tooltip: "The ending color of the gradient background (cover mode only)."
         },
         {
             id: "IcyHider.BorderColor",
             name: "Border Color",
             type: "color",
             defaultValue: "A5DEE5",
-            tooltip: "The color of the border around the cover."
+            tooltip: "The color of the border around the cover (cover mode only)."
         },
         {
             id: "IcyHider.Icon",
             name: "Icon",
             type: "text",
             defaultValue: "❄️",
-            tooltip: "The emoji or text icon to display."
+            tooltip: "The emoji or text icon to display (cover mode only)."
         },
         {
             id: "IcyHider.Text",
             name: "Text",
             type: "text",
             defaultValue: "FROZEN",
-            tooltip: "The text to display below the icon."
+            tooltip: "The text to display below the icon (cover mode only)."
         },
         {
             id: "IcyHider.TextColor",
             name: "Text Color",
             type: "color",
             defaultValue: "E0F7FA",
-            tooltip: "The color of the text and icon."
+            tooltip: "The color of the text and icon (cover mode only)."
         }
     ],
 	async nodeCreated(node, app) {
 		if (node.comfyClass === "IcyPreviewImage" || node.comfyClass === "IcyLoadImage" || node.comfyClass === "IcySaveImage") {
-            node.icy_hidden = true;
+            // Check if enabled on creation
+            const enabled = app.ui.settings.getSettingValue("IcyHider.Enabled", true);
+            node.icy_hidden = enabled;
 
             // Override onMouseEnter
             const origOnMouseEnter = node.onMouseEnter;
             node.onMouseEnter = function(e) {
-                this.icy_hidden = false;
-                this.setDirtyCanvas(true, true);
+                const enabled = app.ui.settings.getSettingValue("IcyHider.Enabled", true);
+                if (enabled) {
+                    this.icy_hidden = false;
+                    this.setDirtyCanvas(true, true);
+                }
                 if (origOnMouseEnter) origOnMouseEnter.apply(this, arguments);
             }
 
             // Override onMouseLeave
             const origOnMouseLeave = node.onMouseLeave;
             node.onMouseLeave = function(e) {
-                this.icy_hidden = true;
-                this.setDirtyCanvas(true, true);
+                const enabled = app.ui.settings.getSettingValue("IcyHider.Enabled", true);
+                if (enabled) {
+                    this.icy_hidden = true;
+                    this.setDirtyCanvas(true, true);
+                }
                 if (origOnMouseLeave) origOnMouseLeave.apply(this, arguments);
             }
 
@@ -70,13 +120,78 @@ app.registerExtension({
             // This is crucial for LoadImage and any node using widgets for display
             const origDrawWidgets = node.drawWidgets;
             node.drawWidgets = function(ctx, posY) {
-                if (this.icy_hidden) {
-                    return; // Skip drawing widgets
+                if (!this.icy_hidden) {
+                    if (origDrawWidgets) {
+                        origDrawWidgets.apply(this, arguments);
+                    }
+                    return;
                 }
-                if (origDrawWidgets) {
-                    origDrawWidgets.apply(this, arguments);
+                
+                const hideMode = app.ui.settings.getSettingValue("IcyHider.HideMode", "cover");
+                
+                if (hideMode === "blur") {
+                    // In blur mode, draw widgets with blur and clipping
+                    ctx.save();
+                    
+                    // Clip to node bounds
+                    const titleHeight = 30;
+                    ctx.beginPath();
+                    ctx.rect(0, titleHeight, this.size[0], this.size[1] - titleHeight);
+                    ctx.clip();
+                    
+                    const blurAmount = app.ui.settings.getSettingValue("IcyHider.BlurAmount", 20);
+                    ctx.filter = `blur(${blurAmount}px)`;
+                    
+                    if (origDrawWidgets) {
+                        origDrawWidgets.apply(this, arguments);
+                    }
+                    
+                    ctx.filter = "none";
+                    ctx.restore();
+                } else {
+                    // Cover mode - skip drawing widgets
+                    return;
                 }
             };
+
+            // Override onDrawBackground for blur effect
+            let originalOnDrawBackground = node.onDrawBackground;
+            
+            Object.defineProperty(node, 'onDrawBackground', {
+                get: function() {
+                    return function(ctx) {
+                        const hideMode = app.ui.settings.getSettingValue("IcyHider.HideMode", "cover");
+                        
+                        if (this.icy_hidden && hideMode === "blur") {
+                            // Apply blur in background drawing with clipping
+                            const blurAmount = app.ui.settings.getSettingValue("IcyHider.BlurAmount", 20);
+                            ctx.save();
+                            
+                            // Clip to node bounds
+                            const titleHeight = 30;
+                            ctx.beginPath();
+                            ctx.rect(0, titleHeight, this.size[0], this.size[1] - titleHeight);
+                            ctx.clip();
+                            
+                            ctx.filter = `blur(${blurAmount}px)`;
+                            
+                            if (originalOnDrawBackground) {
+                                originalOnDrawBackground.apply(this, arguments);
+                            }
+                            
+                            ctx.filter = "none";
+                            ctx.restore();
+                        } else {
+                            if (originalOnDrawBackground) {
+                                originalOnDrawBackground.apply(this, arguments);
+                            }
+                        }
+                    };
+                },
+                set: function(val) {
+                    originalOnDrawBackground = val;
+                }
+            });
 
             // Override onDrawForeground
             let originalOnDrawForeground = node.onDrawForeground;
@@ -84,14 +199,36 @@ app.registerExtension({
             Object.defineProperty(node, 'onDrawForeground', {
                 get: function() {
                     return function(ctx) {
-                        if (originalOnDrawForeground) {
-                            originalOnDrawForeground.apply(this, arguments);
-                        }
-                        if (this.icy_hidden) {
+                        const hideMode = app.ui.settings.getSettingValue("IcyHider.HideMode", "cover");
+                        
+                        if (this.icy_hidden && hideMode === "blur") {
+                            // In blur mode, still draw foreground but with blur and clipping
+                            const blurAmount = app.ui.settings.getSettingValue("IcyHider.BlurAmount", 20);
                             ctx.save();
-                            // Draw a cover over the node content
-                            // We leave the title bar visible (approx 30px)
-                            const titleHeight = 30; 
+                            
+                            // Clip to node bounds
+                            const titleHeight = 30;
+                            ctx.beginPath();
+                            ctx.rect(0, titleHeight, this.size[0], this.size[1] - titleHeight);
+                            ctx.clip();
+                            
+                            ctx.filter = `blur(${blurAmount}px)`;
+                            
+                            if (originalOnDrawForeground) {
+                                originalOnDrawForeground.apply(this, arguments);
+                            }
+                            
+                            ctx.filter = "none";
+                            ctx.restore();
+                        } else if (this.icy_hidden && hideMode === "cover") {
+                            // Cover mode - draw original content first
+                            if (originalOnDrawForeground) {
+                                originalOnDrawForeground.apply(this, arguments);
+                            }
+                            
+                            // Then draw cover on top
+                            ctx.save();
+                            const titleHeight = 30;
                             
                             // Get settings or use defaults
                             const gradStart = "#" + (app.ui.settings.getSettingValue("IcyHider.GradientStart", "1E3C72") || "1E3C72");
@@ -140,6 +277,11 @@ app.registerExtension({
                             ctx.fillText(text, centerX, centerY + 15);
                             
                             ctx.restore();
+                        } else {
+                            // Not hidden, draw normally
+                            if (originalOnDrawForeground) {
+                                originalOnDrawForeground.apply(this, arguments);
+                            }
                         }
                     };
                 },

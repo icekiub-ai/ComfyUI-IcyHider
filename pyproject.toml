@@ -1,0 +1,27 @@
+[project]
+name = "ComfyUI-IcyHider"
+description = "Hide image previews until hovering over nodes, with customizable cover or blur effects"
+version = "2.0.0"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/icekiub-ai/ComfyUI-IcyHider"
+
+[tool.comfy]
+PublisherId = "icekiub-ai"
+DisplayName = "ComfyUI IcyHider"
+Icon = ""
+
+[[tool.comfy.node_definitions]]
+class_name = "IcyPreviewImage"
+display_name = "Icy Preview Image"
+
+[[tool.comfy.node_definitions]]
+class_name = "IcyLoadImage"
+display_name = "Icy Load Image"
+
+[[tool.comfy.node_definitions]]
+class_name = "IcySaveImage"
+display_name = "Icy Save Image"
