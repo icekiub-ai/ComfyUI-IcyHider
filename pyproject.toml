@@ -1,8 +1,9 @@
 [project]
 name = "ComfyUI-IcyHider"
-description = "Hide image previews until hovering over nodes, with customizable cover or blur effects"
-version = "2.0.0"
+description = "Hide image previews until hovering/selecting nodes. Features: Avalanche mode (hide ALL nodes), cover/blur effects, animated media detection, WAS Node Suite & WAS Extras support, fully customizable themes."
+version = "3.0.0"
 dependencies = []
+keywords = ["comfyui", "privacy", "nsfw", "blur", "hide", "preview"]
 
 [project.urls]
 Repository = "https://github.com/icekiub-ai/ComfyUI-IcyHider"
@@ -10,17 +11,18 @@ Repository = "https://github.com/icekiub-ai/ComfyUI-IcyHider"
 [tool.comfy]
 PublisherId = "icekiub"
 DisplayName = "ComfyUI IcyHider"
-Icon = ""
+Icon = "❄️"
 
-[[tool.comfy.node_definitions]]
-class_name = "IcyPreviewImage"
-display_name = "Icy Preview Image"
-
-[[tool.comfy.node_definitions]]
-class_name = "IcyLoadImage"
-display_name = "Icy Load Image"
-
-[[tool.comfy.node_definitions]]
-class_name = "IcySaveImage"
-display_name = "Icy Save Image"
+# Dynamic node wrapping - automatically creates Icy versions of:
+# - All ComfyUI core nodes (PreviewImage, LoadImage, SaveImage, etc.)
+# - WAS Node Suite nodes (if installed)
+# - WAS Extras nodes (if installed)
+# 
+# Features in v3.0.0:
+# - Avalanche Mode: Hide ALL nodes until selected (not just Icy nodes)
+# - Hide Modes: Choose between cover overlay or blur effect
+# - Animated Media Detection: Auto-covers videos, GIFs, APNGs, AVIFs, WebPs
+# - Customizable Themes: Gradient colors, border, icon, text, blur amount
+# - Performance Optimized: Settings caching, debounced DOM updates
+# - Smooth Transitions: CSS animations for show/hide effects
 
