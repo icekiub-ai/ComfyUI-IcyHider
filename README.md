@@ -22,6 +22,8 @@ A ComfyUI custom node extension that hides image previews until you hover over o
 - **Dynamic node wrapping**: Automatically wraps ComfyUI core nodes, WAS Node Suite, and WAS Extras
 - **Works with all node types**: Compatible with any node that has image outputs
 
+Shoutout to @RobertAgee for this latest update
+
 ## Installation
 
 ### Via ComfyUI Manager (Recommended)
@@ -127,5 +129,6 @@ MIT License
 ## Credits
 
 Created for ComfyUI
+
 
 
