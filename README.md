@@ -1,28 +1,35 @@
-# ComfyUI-IcyHider
+# ComfyUI-IcyHider ❄️
 
-A ComfyUI custom node extension that hides image previews until you hover over the node, helping keep your workflow clean and organized.
+A ComfyUI custom node extension that hides image previews until you hover over or select nodes, helping keep your workflow clean, organized, and private.
 
-## ✨ What's New in v2.0
-<img width="2282" height="1117" alt="image" src="https://github.com/user-attachments/assets/9d05c7e7-d716-43c0-be5f-2365a45652f1" />
+## ✨ What's New in v3.0
+<img width="2211" height="1222" alt="image" src="https://github.com/user-attachments/assets/42a7f876-1690-4530-8dff-bf0913728c83" />
 
-- **🎛️ Enable/Disable Toggle**: Easily turn the hiding functionality on/off without removing nodes
-- **🌫️ Blur Mode**: New blur effect option as an alternative to the cover overlay
-- **📊 Adjustable Blur Intensity**: Fine-tune blur amount with a slider (0-50px)
-- **⚡ Instant Setting Updates**: Changes apply immediately without page refresh
-- **🎨 Enhanced Customization**: More control over your workflow's appearance
+- **🌊 Avalanche Mode**: Hide ALL nodes in your workflow (not just Icy nodes) - reveal by selecting!
+- **🎬 Animated Media Detection**: Automatically covers videos, GIFs, APNGs, AVIFs, and WebPs
+- **🔌 Extended Node Support**: Now wraps WAS Node Suite and WAS Extras nodes automatically
+- **⚡ Performance Optimized**: Settings caching and debounced DOM updates for smooth operation
+- **✨ Smooth Transitions**: CSS animations for elegant show/hide effects
+- **🔄 Dynamic Node Wrapping**: Automatically creates Icy versions of all compatible nodes
 
 ## Features
-<img width="2202" height="1101" alt="image" src="https://github.com/user-attachments/assets/6b31c475-fd5a-411b-bb1b-fbe61fe5fbbb" />
 
-- **Auto-hide on mouse leave**: Images are automatically hidden when your mouse is not hovering over the node
+- **Avalanche Mode**: When ON, hides ALL nodes until selected. When OFF, only Icy nodes are hidden (revealed on hover)
 - **Two hiding modes**: Choose between stylish cover overlay or subtle blur effect
+- **Animated media handling**: Videos and animated images are always covered (never blurred) for privacy
 - **Customizable cover style**: Fully customizable icy-themed cover with gradient, border, icon, and text
 - **Adjustable blur**: Control blur intensity from subtle to completely obscured
-- **Easy toggle**: Enable or disable hiding functionality with a single switch
-- **Works with multiple node types**: Compatible with Preview Image, Load Image, and Save Image nodes
+- **Dynamic node wrapping**: Automatically wraps ComfyUI core nodes, WAS Node Suite, and WAS Extras
+- **Works with all node types**: Compatible with any node that has image outputs
 
 ## Installation
 
+### Via ComfyUI Manager (Recommended)
+1. Open ComfyUI Manager
+2. Search for "IcyHider"
+3. Click Install
+
+### Manual Installation
 1. Clone this repository into your ComfyUI custom nodes folder:
    ```
    cd ComfyUI/custom_nodes
@@ -33,14 +40,18 @@ A ComfyUI custom node extension that hides image previews until you hover over t
 
 ## Nodes
 
-### Icy Preview Image
-A preview image node that hides the image when not hovering.
+IcyHider dynamically creates Icy versions of nodes from multiple sources:
 
-### Icy Load Image
-A load image node that hides the image preview when not hovering.
+### ComfyUI Core Nodes
+- **Icy PreviewImage**, **Icy LoadImage**, **Icy SaveImage**, and many more...
 
-### Icy Save Image
-A save image node that hides the image preview when not hovering.
+### WAS Node Suite (if installed)
+- All compatible WAS nodes are automatically wrapped
+
+### WAS Extras (if installed)
+- All compatible WAS Extras nodes are automatically wrapped
+
+All wrapped nodes appear in the **IcyHider** category in the node menu.
 
 ## Customization
 
@@ -51,36 +62,51 @@ You can customize the hiding behavior and appearance through ComfyUI Settings:
 3. Customize the following options:
 
 ### General Settings
-   - **Enable Hiding**: Toggle the hiding functionality on/off
-   - **Hide Mode**: Choose between "cover" (overlay) or "blur" effect
-   - **Blur Amount**: Adjust blur intensity (0-50px) when using blur mode
+- **Hide All Nodes (Avalanche)**: When ON, all nodes are hidden until selected. When OFF, only Icy nodes are hidden (revealed on hover)
+- **Hide Mode**: Choose between "cover" (overlay) or "blur" effect
+- **Blur Amount**: Adjust blur intensity (0-50px) when using blur mode
 
 ### Cover Mode Settings (only apply when Hide Mode is "cover")
-   - **Gradient Start Color**: Top color of the gradient background
-   - **Gradient End Color**: Bottom color of the gradient background
-   - **Border Color**: Color of the border around the cover
-   - **Icon**: The emoji or text icon to display (default: ❄️)
-   - **Text**: The text to display below the icon (default: FROZEN)
-   - **Text Color**: Color of the text and icon
+- **Gradient Start Color**: Top color of the gradient background
+- **Gradient End Color**: Bottom color of the gradient background
+- **Border Color**: Color of the border around the cover
+- **Icon**: The emoji or text icon to display (default: ❄️)
+- **Text**: The text to display below the icon (default: FROZEN)
+- **Text Color**: Color of the text and icon
 
 All color settings use a color picker for easy selection.
 
 ## Usage
 
-1. Add any of the Icy nodes to your workflow from the **IcyHider** category
-2. Connect them like you would use standard Preview/Load/Save Image nodes
-3. The image will be hidden behind a stylish cover (or blurred) when you're not hovering over the node
-4. Hover over the node to reveal the image
-5. Customize the appearance in Settings → IcyHider
+### With Avalanche Mode ON (Default)
+1. All nodes in your workflow are hidden by default
+2. **Click/select a node** to reveal its content
+3. Content hides again when you deselect the node
+4. Great for privacy and clean screenshots!
+
+### With Avalanche Mode OFF
+1. Add any Icy nodes to your workflow from the **IcyHider** category
+2. Connect them like standard nodes
+3. **Hover over a node** to reveal its content
+4. Content hides when you move your mouse away
 
 ## Tips
 
+- Use **Avalanche Mode** for maximum privacy - hide everything at once!
 - Use **blur mode** for a subtle preview effect that still shows composition
 - Use **cover mode** for complete privacy or a cleaner workspace
-- Disable hiding temporarily when debugging without removing nodes
-- Adjust blur amount based on your preference and image sensitivity
+- Animated content (videos, GIFs) is always covered, never blurred, for better privacy
+- Changing Avalanche Mode or Hide Mode requires a page reload to take effect
 
 ## Changelog
+
+### v3.0.0
+- Added Avalanche Mode to hide ALL nodes (not just Icy nodes)
+- Added automatic animated media detection (video, GIF, APNG, AVIF, WebP)
+- Added dynamic wrapping for WAS Node Suite and WAS Extras
+- Added performance optimizations (settings caching, debounced updates)
+- Added smooth CSS transitions for show/hide effects
+- Improved selection-based reveal in Avalanche mode
 
 ### v2.0.0
 - Added enable/disable toggle for hiding functionality
