@@ -1,7 +1,7 @@
 [project]
 name = "ComfyUI-IcyHider"
-description = "Hide image previews until hovering/selecting nodes. Features: Avalanche mode (hide ALL nodes), cover/blur effects, animated media detection, WAS Node Suite & WAS Extras support, fully customizable themes."
-version = "3.0.0"
+description = "Hide image previews until hovering/selecting nodes. Features: Avalanche mode (hide ALL nodes), cover/blur effects, animated media detection, WAS Node Suite & WAS Extras support, fully customizable themes. Toggle keybind."
+version = "3.1.0"
 dependencies = []
 keywords = ["comfyui", "privacy", "nsfw", "blur", "hide", "preview"]
 
@@ -25,4 +25,5 @@ Icon = "❄️"
 # - Customizable Themes: Gradient colors, border, icon, text, blur amount
 # - Performance Optimized: Settings caching, debounced DOM updates
 # - Smooth Transitions: CSS animations for show/hide effects
+# - Keybind toggle: You can now configure a keybinding (default: Ctrl+H) to quickly enable/disable IcyHider. Configure in ComfyUI Settings → IcyHider → Toggle Key and press the combo to toggle hiding.
 
