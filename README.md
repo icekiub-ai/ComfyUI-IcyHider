@@ -2,7 +2,10 @@
 
 A ComfyUI custom node extension that hides image previews until you hover over or select nodes, helping keep your workflow clean, organized, and private.
 
-## ✨ What's New in v3.1
+## ✨ What's New in v3.1 QoL patch
+- **⌨️ Keybind toggle**: You can now configure a keybinding (default: Ctrl+H) to quickly enable/disable IcyHider. Configure in ComfyUI Settings → IcyHider → Toggle Key and press the combo to toggle hiding.
+
+## ✨ What's New in v3.0
 <img width="2211" height="1222" alt="image" src="https://github.com/user-attachments/assets/42a7f876-1690-4530-8dff-bf0913728c83" />
 
 - **🌊 Avalanche Mode**: Hide ALL nodes in your workflow (not just Icy nodes) - reveal by selecting!
@@ -11,7 +14,6 @@ A ComfyUI custom node extension that hides image previews until you hover over o
 - **⚡ Performance Optimized**: Settings caching and debounced DOM updates for smooth operation
 - **✨ Smooth Transitions**: CSS animations for elegant show/hide effects
 - **🔄 Dynamic Node Wrapping**: Automatically creates Icy versions of all compatible nodes
-- **⌨️ Keybind toggle**: You can now configure a keybinding (default: Ctrl+H) to quickly enable/disable IcyHider. Configure in ComfyUI Settings → IcyHider → Toggle Key and press the combo to toggle hiding.
 
 ## Features
 
@@ -103,6 +105,9 @@ All color settings use a color picker for easy selection.
 
 ## Changelog
 
+### v3.1.0
+- Added keybind toggle
+
 ### v3.0.0
 - Added Avalanche Mode to hide ALL nodes (not just Icy nodes)
 - Added automatic animated media detection (video, GIF, APNG, AVIF, WebP)
@@ -130,6 +135,7 @@ MIT License
 ## Credits
 
 Created for ComfyUI
+
 
 
 
