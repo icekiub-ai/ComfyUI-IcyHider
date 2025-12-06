@@ -11,7 +11,7 @@ A ComfyUI custom node extension that hides image previews until you hover over o
 - **⚡ Performance Optimized**: Settings caching and debounced DOM updates for smooth operation
 - **✨ Smooth Transitions**: CSS animations for elegant show/hide effects
 - **🔄 Dynamic Node Wrapping**: Automatically creates Icy versions of all compatible nodes
-- **Keybind toggle**: You can now configure a keybinding (default: Ctrl+H) to quickly enable/disable IcyHider. Configure in ComfyUI Settings → IcyHider → Toggle Key and press the combo to toggle hiding.
+- **⌨️ Keybind toggle**: You can now configure a keybinding (default: Ctrl+H) to quickly enable/disable IcyHider. Configure in ComfyUI Settings → IcyHider → Toggle Key and press the combo to toggle hiding.
 
 ## Features
 
@@ -130,6 +130,7 @@ MIT License
 ## Credits
 
 Created for ComfyUI
+
 
 
 
