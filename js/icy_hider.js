@@ -11,6 +11,8 @@ let settingsCache = {
     icon: "❄️",
     text: "FROZEN",
     textColor: "E0F7FA",
+    enabled: true,           //  global enable/disable toggle
+    toggleKey: "Ctrl+H",     //  keybind string for toggling enabled state
     dirty: true
 };
 
@@ -26,6 +28,8 @@ function refreshSettingsCache() {
     settingsCache.icon = app.ui.settings.getSettingValue("IcyHider.Icon", "❄️") || "❄️";
     settingsCache.text = app.ui.settings.getSettingValue("IcyHider.Text", "FROZEN") || "FROZEN";
     settingsCache.textColor = app.ui.settings.getSettingValue("IcyHider.TextColor", "E0F7FA") || "E0F7FA";
+    settingsCache.enabled = app.ui.settings.getSettingValue("IcyHider.Enabled", true); // cache entry for plugin state
+    settingsCache.toggleKey = app.ui.settings.getSettingValue("IcyHider.ToggleKey", "Ctrl+H") || "Ctrl+H"; // cache entry for toggle keybind
     settingsCache.dirty = false;
 }
 
@@ -40,7 +44,8 @@ function isIcyNode(node) {
 
 // Single source of truth: should this node be hidden right now?
 // This is called during draw, so it checks current state directly
-function computeHiddenForNode(node) {
+function computeHiddenForNode(node) { 
+    if (!settingsCache.enabled) return false; // if plugin is disabled, nothing is hidden
     if (settingsCache.avalanche) {
         // Avalanche ON: All nodes hidden unless selected
         // Check is_selected which is more reliable than selected property
@@ -113,6 +118,19 @@ function isAnimatedMediaElement(element) {
 // Function to apply blur/cover to DOM elements within a node
 function updateNodeDOMElements(node, hide) {
     if (!node.widgets) return;
+
+    if (!settingsCache.enabled) {     // If globally disabled, always ensure normal state
+        for (let i = 0; i < node.widgets.length; i++) {
+            const widget = node.widgets[i];
+            const element = widget.inputEl || widget.element;
+            if (!element) continue;
+            element.style.filter = "none";
+            element.style.opacity = "1";
+            element.style.pointerEvents = "auto";
+            element.style.userSelect = "auto";
+        }
+        return;
+    }
     
     const hideMode = settingsCache.hideMode;
     const blurAmount = settingsCache.blurAmount;
@@ -210,6 +228,44 @@ function showReloadDialog() {
 app.registerExtension({
     name: "Comfy.IcyHider",
     settings: [
+        // enable/disable toggle
+        {
+            id: "IcyHider.Enabled",
+            name: "Enable Hiding",
+            type: "boolean",
+            defaultValue: true,
+            tooltip: "Globally enable or disable the IcyHider functionality.",
+            onChange: (newVal, oldVal) => {
+                markSettingsDirty();
+                // Immediate runtime update
+                refreshSettingsCache();
+
+                // Iterate nodes and update DOM + canvas to reflect new enabled state
+                if (app.graph && app.graph._nodes) {
+                    for (let i = 0; i < app.graph._nodes.length; i++) {
+                        const graphNode = app.graph._nodes[i];
+                        // recalc hidden and update DOM immediately
+                        const changed = updateNodeHidden(graphNode, false);
+                        if (changed && graphNode.setDirtyCanvas) {
+                            graphNode.setDirtyCanvas(true, true);
+                        } else {
+                            // ensure DOM reflects new state even if state didn't toggle
+                            updateNodeDOMElements(graphNode, computeHiddenForNode(graphNode));
+                        }
+                    }
+                }
+            }
+        },
+
+        // toggle key setting
+        {
+            id: "IcyHider.ToggleKey",
+            name: "Toggle Keybind",
+            type: "text",
+            defaultValue: "Ctrl+H",
+            tooltip: "Key combination to toggle IcyHider Enable/Disable. Examples: 'Ctrl+H', 'Ctrl+Alt+H', 'Shift+F2'.",
+            onChange: () => markSettingsDirty()
+        },
         {
             id: "IcyHider.Avalanche",
             name: "Hide All Nodes (Icy + Non-Icy)",
@@ -548,7 +604,118 @@ app.registerExtension({
         // Initial settings load
         refreshSettingsCache();
         
-        // Debounced DOM update function for MutationObserver
+        // helper to normalize and match a KeyboardEvent against the configured binding
+        function parseKeySpec(specStr) {
+            // Example input: "Ctrl+Alt+H" or "Control+Shift+F2"
+            const parts = specStr.split("+").map(s => s.trim().toLowerCase());
+            const keys = {
+                ctrl: parts.includes("ctrl") || parts.includes("control"),
+                alt: parts.includes("alt"),
+                shift: parts.includes("shift"),
+                meta: parts.includes("meta") || parts.includes("cmd") || parts.includes("super"),
+                key: parts.reverse().find(p => !["ctrl","control","alt","shift","meta","cmd","super"].includes(p))
+            };
+            return keys;
+        }
+
+        function eventMatchesSpec(e, spec) {
+            if (!spec) return false;
+            if (!!e.ctrlKey !== !!spec.ctrl) return false;
+            if (!!e.altKey !== !!spec.alt) return false;
+            if (!!e.shiftKey !== !!spec.shift) return false;
+            if (!!e.metaKey !== !!spec.meta) return false;
+            if (!spec.key) return true; // no main key specified => only modifiers
+            const eventKey = (e.key || "").toLowerCase();
+            const specKey = spec.key.toLowerCase();
+            return eventKey === specKey || (eventKey === specKey.toLowerCase());
+        }
+
+        // Toggle handler flips the enabled setting and updates nodes immediately
+        function toggleEnabledState(triggeredByShortcut = false) {
+            refreshSettingsCache();
+            const newState = !settingsCache.enabled;
+            if (app.ui && app.ui.settings && typeof app.ui.settings.setSettingValue === "function") {
+                app.ui.settings.setSettingValue("IcyHider.Enabled", newState);
+            } else {
+                settingsCache.enabled = newState;
+            }
+            markSettingsDirty();
+            refreshSettingsCache();
+
+            // update every graph node immediately
+            if (app.graph && app.graph._nodes) {
+                for (let i = 0; i < app.graph._nodes.length; i++) {
+                    const graphNode = app.graph._nodes[i];
+                    updateNodeHidden(graphNode, false);
+                    updateNodeDOMElements(graphNode, computeHiddenForNode(graphNode));
+                    if (graphNode.setDirtyCanvas) graphNode.setDirtyCanvas(true, true);
+                }
+            }
+
+            if (triggeredByShortcut) {
+                try {
+                    const msg = newState ? "IcyHider enabled" : "IcyHider disabled";
+                    if (app && app.notify) app.notify(msg);
+                } catch (e) { }
+            }
+        }
+
+        // Try to register a native ComfyUI shortcut / action, fallback to document listener
+        function tryRegisterComfyShortcut() {
+            refreshSettingsCache();
+            const spec = parseKeySpec(settingsCache.toggleKey);
+            try {
+                if (app.shortcuts && typeof app.shortcuts.register === "function") {
+                    app.shortcuts.register({
+                        id: "IcyHider.toggle",
+                        name: "Toggle IcyHider Hiding",
+                        defaultKey: settingsCache.toggleKey,
+                        callback: () => toggleEnabledState(true)
+                    });
+                    return true;
+                } else if (app.ui && app.ui.shortcuts && typeof app.ui.shortcuts.register === "function") {
+                    app.ui.shortcuts.register("IcyHider.toggle", {
+                        title: "Toggle IcyHider Hiding",
+                        default: settingsCache.toggleKey,
+                        action: () => toggleEnabledState(true)
+                    });
+                    return true;
+                }
+            } catch (e) {
+                console.warn("[Comfy.IcyHider] ComfyUI shortcut registration failed, falling back to document listener:", e);
+            }
+
+            return false;
+        }
+
+        // DOM-level key handling fallback
+        let lastSpec = null;
+        const domKeyHandler = (e) => {
+            const tag = (document.activeElement && document.activeElement.tagName) || "";
+            if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) || document.activeElement?.isContentEditable) return;
+
+            refreshSettingsCache();
+            if (!settingsCache.toggleKey) return;
+
+            try {
+                if (!lastSpec || lastSpec._raw !== settingsCache.toggleKey) {
+                    lastSpec = parseKeySpec(settingsCache.toggleKey);
+                    lastSpec._raw = settingsCache.toggleKey;
+                }
+                if (eventMatchesSpec(e, lastSpec)) {
+                    e.preventDefault();
+                    toggleEnabledState(true);
+                }
+            } catch (err) {
+            }
+        };
+
+        // register the shortcut if possible; otherwise use DOM listener fallback
+        const registered = tryRegisterComfyShortcut();
+        if (!registered) {
+            document.addEventListener("keydown", domKeyHandler);
+        }
+        
         let domUpdateTimeout = null;
         const debouncedDOMUpdate = () => {
             if (domUpdateTimeout) return;
@@ -606,3 +773,4 @@ app.registerExtension({
         document.head.appendChild(style);
     }
 });
+
